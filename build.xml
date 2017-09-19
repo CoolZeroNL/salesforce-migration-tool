@@ -1,0 +1,141 @@
+<project name="salesforce" default="deploy" basedir="." xmlns:sf="antlib:com.salesforce">
+
+    <taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+        <classpath>
+            <pathelement location="${antSalesforceJar}" />
+        </classpath>
+    </taskdef>
+
+    <property file="./gitignore/Salesforce-Build.properties" />
+
+    <target name="init">
+        <tstamp>
+            <format property="START_TIME" pattern="yyyyMMdd-HHmmss"/>
+        </tstamp>
+    </target>
+
+    <target name="retrieve" depends="init">
+        <mkdir dir="${retrieveBase}/${username}/${START_TIME}/src"/>
+
+        <sf:retrieve
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            retrieveTarget="${retrieveBase}/${username}/${START_TIME}/src"
+            unpackaged="src/package.xml"/>
+    </target>
+
+    <target name="backupdeploy" depends="init">
+        <antcall target="retrieve"/>
+
+        <sf:deploy
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            maxPoll="300"
+            deployRoot="src"
+            rollbackOnError="true"
+            allowMissingFiles="true"
+            ignoreWarnings="true"/>
+    </target>
+
+    <target name="deploy">
+        <sf:deploy
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            maxPoll="300"
+            deployRoot="src"
+            rollbackOnError="true"
+            allowMissingFiles="true"
+            purgeOnDelete="true"
+            ignoreWarnings="true"/>
+    </target>
+
+    <target name="runalltests">
+        <sf:deploy
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            maxPoll="300"
+            testLevel="RunAllTestsInOrg"
+            deployRoot="nulldeploy_src"
+            ignoreWarnings="true"/>
+    </target>
+
+    <target name="deployCodeCheckOnly">
+        <sf:deploy
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            maxPoll="300"
+            testLevel="RunSpecifiedTests"
+            logType="None"
+            deployRoot="nulldeploy_src">
+            <runTest>Test_ExecutionDataHelper</runTest>
+            <runTest>Test_Expressions</runTest>
+            <runTest>Test_ProcessDesignerController</runTest>
+            <runTest>Test_ProcessEngineMainController_Email</runTest>
+            <runTest>Test_ProcessEngineMainController</runTest>
+        </sf:deploy>
+    </target>
+
+    <target name="REMOVE_CODE" depends="init">
+        <mkdir dir="${retrieveBase}/${username}/${START_TIME}/deletebackup"/>
+
+        <sf:retrieve
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            retrieveTarget="${retrieveBase}/${username}/${START_TIME}/deletebackup"
+            unpackaged="removal/package.xml"/>
+
+        <sf:deploy
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            maxPoll="300"
+            deployRoot="removal"
+            purgeOnDelete="true"
+            rollbackOnError="true"
+            allowMissingFiles="true"
+            ignoreWarnings="true"/>
+    </target>
+
+    <target name="runAllUnitTests">
+        <sf:deploy
+            username="${username}"
+            password="${password}"
+            serverurl="${serverurl}"
+            maxPoll="300"
+            testLevel="RunSpecifiedTests"
+            logType="None"
+            deployRoot="nulldeploy_src">
+            <runTest>Test_ExecutionDataHelper</runTest>
+            <runTest>Test_Expressions</runTest>
+            <runTest>Test_ProcessDesignerController</runTest>
+            <runTest>Test_ProcessEngineMainController_Email</runTest>
+            <runTest>Test_ProcessEngineMainController</runTest>
+        </sf:deploy>
+    </target>
+
+    <target name="describeMetadata" depends="init">
+      <mkdir dir="${retrieveBase}/${username}/${START_TIME}"/>
+      <sf:describeMetadata
+        username="${username}"
+        password="${password}"
+        serverurl="${serverurl}"
+        resultFilePath="${retrieveBase}/${username}/${START_TIME}/describe.log"/>
+    </target>
+
+    <target name="listEmailTemplate" depends="init">
+      <mkdir dir="${retrieveBase}/${username}/${START_TIME}"/>
+      <sf:listMetadata
+        username="${username}"
+        password="${password}"
+        serverurl="${serverurl}"
+        metadataType="EmailTemplate"
+        folder="${folder}"
+        resultFilePath="${retrieveBase}/${username}/${START_TIME}/list.log"/>
+    </target>
+</project>

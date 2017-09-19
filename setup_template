@@ -1,0 +1,6 @@
+username='you@example.com.xxxx'
+password='xxxx'
+token='xxxx'
+serverurl='login.salesforce.com'
+retrievebase="${HOME}/Downloads/antretrieve"
+ant_salesforce_jar="${HOME}/Downloads/salesforce_ant_39.0/ant-salesforce.jar"
